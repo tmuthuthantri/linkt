@@ -9,7 +9,7 @@ import { Modal, cx } from './ui';
 
 const META: Record<AuditEventType, { label: string; icon: typeof History; cls: string }> = {
   import: { label: 'Import', icon: FileUp, cls: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' },
-  analysis: { label: 'AI analysis', icon: Brain, cls: 'bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400' },
+  analysis: { label: 'AI analysis', icon: Brain, cls: 'bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400' },
   override: { label: 'Override', icon: MousePointerClick, cls: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' },
   note: { label: 'Note', icon: MessageSquareText, cls: 'bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400' },
   bulk: { label: 'Bulk action', icon: ListChecks, cls: 'bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400' },

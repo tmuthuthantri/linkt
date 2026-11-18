@@ -324,7 +324,7 @@ function SaturdayTab({ draft, set }: TabProps) {
             {newDate && parseISO(newDate).getDay() !== 6 && <p className="mt-1 text-xs text-amber-600">Pick a Saturday.</p>}
             <div className="mt-2 flex flex-wrap gap-1.5">
               {s.customDates.map((d) => (
-                <span key={d} className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-1 text-xs text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
+                <span key={d} className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-xs text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
                   {fmtDate(d, 'd MMM yyyy')}
                   <button onClick={() => u({ customDates: s.customDates.filter((x) => x !== d) })} aria-label={`Remove ${d}`}>×</button>
                 </span>
@@ -412,7 +412,7 @@ function LeaveTab({ draft, set }: TabProps) {
             <Plus className="h-4 w-4" /> Add
           </button>
         </div>
-        <DateList items={draft.oneOffWorkDays.map((o) => ({ id: o.id, date: o.date, label: o.note ?? 'Work day' }))} onRemove={(id) => set('oneOffWorkDays', draft.oneOffWorkDays.filter((o) => o.id !== id))} tone="violet" />
+        <DateList items={draft.oneOffWorkDays.map((o) => ({ id: o.id, date: o.date, label: o.note ?? 'Work day' }))} onRemove={(id) => set('oneOffWorkDays', draft.oneOffWorkDays.filter((o) => o.id !== id))} tone="sky" />
       </div>
 
       <div>
@@ -450,8 +450,8 @@ function LeaveTab({ draft, set }: TabProps) {
   );
 }
 
-function DateList({ items, onRemove, tone }: { items: { id: string; date: string; label: string }[]; onRemove: (id: string) => void; tone: 'amber' | 'violet' | 'rose' }) {
-  const tones = { amber: 'bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300', violet: 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300', rose: 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300' };
+function DateList({ items, onRemove, tone }: { items: { id: string; date: string; label: string }[]; onRemove: (id: string) => void; tone: 'amber' | 'sky' | 'rose' }) {
+  const tones = { amber: 'bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300', sky: 'bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300', rose: 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300' };
   if (!items.length) return <p className="mt-2 text-xs text-slate-500">None added.</p>;
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">

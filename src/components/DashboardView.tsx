@@ -12,7 +12,6 @@ import {
   ListChecks,
   Receipt,
   Route,
-  SearchCheck,
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
@@ -20,7 +19,8 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { useTollStore } from '../store/useTollStore';
 import { useAnalysis } from '../hooks/useAnalysis';
 import { fmtDate, money, to12h, WEEKDAYS_SHORT } from '../utils/format';
-import { Badge, EmptyState, SectionTitle, cx } from './ui';
+import { Badge, SectionTitle, cx } from './ui';
+import WelcomeView from './WelcomeView';
 
 export default function DashboardView() {
   const hasData = useTollStore((s) => s.transactions.length > 0);
@@ -52,52 +52,15 @@ export default function DashboardView() {
     return [...m.values()].sort((a, b) => b.Claimed + b.Other - (a.Claimed + a.Other));
   }, [transactions]);
 
-  if (!hasData) {
-    return (
-      <div className="mx-auto max-w-3xl pt-8">
-        <EmptyState
-          icon={<FileUp className="h-8 w-8" />}
-          title="Upload your Linkt statements to get started"
-          body={
-            <>
-              Drop in one or more Linkt toll statements or tax invoices (PDF). The assistant extracts every toll, matches it against your roster and commute windows,
-              highlights claimable trips on the original PDF and builds a manager-ready reimbursement package.
-            </>
-          }
-          actions={
-            <>
-              <button className="btn-primary" onClick={() => openModal('upload')}>
-                <FileUp className="h-4 w-4" /> Upload statements
-              </button>
-              <button className="btn-secondary" onClick={() => openModal('settings')}>
-                Set up roster & profile
-              </button>
-            </>
-          }
-        />
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          {[
-            { icon: SearchCheck, title: 'Exact extraction', body: 'Reads the original PDF text layer — payments and surcharges are ignored.' },
-            { icon: Brain, title: 'Commute detection', body: 'Scores every toll 0–100% against your roster, leave and public holidays.' },
-            { icon: Receipt, title: 'Audit-ready exports', body: 'Highlighted statement PDF, claim report, Excel and CSV with GST.' },
-          ].map(({ icon: Icon, title, body }) => (
-            <div key={title} className="card p-4">
-              <Icon className="mb-2 h-5 w-5 text-blue-600 dark:text-blue-400" />
-              <div className="text-sm font-semibold">{title}</div>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (!hasData) return <WelcomeView />;
 
-  const axis = theme === 'dark' ? '#94a3b8' : '#64748b';
-  const grid = theme === 'dark' ? '#1e293b' : '#e2e8f0';
-  const surface = theme === 'dark' ? '#0f172a' : '#ffffff';
+  // Chart tokens follow the slate palette in index.css.
+  const axis = theme === 'dark' ? '#95a3a9' : '#5d6b72';
+  const grid = theme === 'dark' ? '#2c3c44' : '#dde4e7';
+  const surface = theme === 'dark' ? '#1f3038' : '#ffffff';
   const C = theme === 'dark'
-    ? { claimed: '#34d399', review: '#fbbf24', excluded: '#64748b', other: '#475569' }
-    : { claimed: '#059669', review: '#f59e0b', excluded: '#cbd5e1', other: '#cbd5e1' };
+    ? { claimed: '#34d399', review: '#fbbf24', excluded: '#4a5960', other: '#3a4a52' }
+    : { claimed: '#059669', review: '#f59e0b', excluded: '#c5cfd3', other: '#c5cfd3' };
   const reviewCount = transactions.filter((t) => t.status === 'review').length;
   const period = statements
     .flatMap((s) => [s.periodStart, s.periodEnd])
@@ -293,7 +256,7 @@ function Kpi({
   };
   const Comp = onClick ? 'button' : 'div';
   return (
-    <Comp onClick={onClick} className={cx('card p-4 text-left', onClick && 'transition-shadow hover:shadow-md')}>
+    <Comp onClick={onClick} className={cx('card p-4 text-left', onClick && 'lift')}>
       <div className="flex items-center gap-2">
         <span className={cx('rounded-md p-1.5', tones[tone])}>
           <Icon className="h-4 w-4" />
@@ -311,7 +274,7 @@ function HabitsCard({ habits }: { habits: ReturnType<typeof useAnalysis>['habits
   const byWeekday = new Map(habits.commonWorkDays.map((d) => [d.weekday, d.count]));
   return (
     <div className="card p-5">
-      <SectionTitle right={<Badge tone="violet"><Brain className="h-3 w-3" /> Learned</Badge>}>AI learned commute habits</SectionTitle>
+      <SectionTitle right={<Badge tone="sky"><Brain className="h-3 w-3" /> Learned</Badge>}>AI learned commute habits</SectionTitle>
       <div className="grid grid-cols-2 gap-3">
         <Habit icon={Clock} label="Avg morning departure" value={habits.avgMorningDeparture ? to12h(habits.avgMorningDeparture) : '—'} />
         <Habit icon={Clock} label="Avg evening return" value={habits.avgEveningReturn ? to12h(habits.avgEveningReturn) : '—'} />

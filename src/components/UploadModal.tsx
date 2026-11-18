@@ -155,7 +155,7 @@ export default function UploadModal() {
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
         <span>Payments (cr), card surcharges and summary totals are excluded automatically.</span>
-        <button className="btn-ghost btn-sm" onClick={loadSample} disabled={busy}>
+        <button className="btn-ghost btn-sm" data-action="load-sample" onClick={loadSample} disabled={busy}>
           <Sparkles className="h-3.5 w-3.5" /> Try a sample statement
         </button>
       </div>

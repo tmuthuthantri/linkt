@@ -286,10 +286,10 @@ function toggleSet(set: React.Dispatch<React.SetStateAction<Set<string>>>, id: s
 }
 
 export function DayBadge({ dayType, label }: { dayType: AnalysedTransaction['dayType']; label: string }) {
-  const map: Record<AnalysedTransaction['dayType'], { tone: 'blue' | 'violet' | 'slate' | 'rose' | 'amber' | 'emerald'; text: string }> = {
+  const map: Record<AnalysedTransaction['dayType'], { tone: 'blue' | 'sky' | 'slate' | 'rose' | 'amber' | 'emerald'; text: string }> = {
     rostered: { tone: 'blue', text: 'Rostered' },
-    'saturday-roster': { tone: 'violet', text: 'Saturday shift' },
-    'one-off-work': { tone: 'violet', text: 'One-off work day' },
+    'saturday-roster': { tone: 'sky', text: 'Saturday shift' },
+    'one-off-work': { tone: 'sky', text: 'One-off work day' },
     weekend: { tone: 'slate', text: 'Weekend' },
     'non-rostered': { tone: 'slate', text: 'Not rostered' },
     leave: { tone: 'amber', text: 'Leave' },

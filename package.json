@@ -12,6 +12,8 @@
     "sample:generate": "node scripts/generate-sample-statement.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
     "@tesseract.js-data/eng": "^1.0.0",
     "canvas-confetti": "^1.9.4",
     "date-fns": "^4.4.0",
