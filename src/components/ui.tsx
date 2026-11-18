@@ -72,6 +72,8 @@ export function Badge({ children, tone = 'slate', className }: { children: React
   return <span className={cx('inline-flex items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-medium', tones[tone], className)}>{children}</span>;
 }
 
+const modalStack: object[] = [];
+
 export function Modal({
   open,
   onClose,
@@ -93,9 +95,17 @@ export function Modal({
 }) {
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const token = {};
+    modalStack.push(token);
+    const onKey = (e: KeyboardEvent) => {
+      // Only the top-most modal responds, so stacked dialogs close one at a time.
+      if (e.key === 'Escape' && modalStack[modalStack.length - 1] === token) onClose();
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      modalStack.splice(modalStack.indexOf(token), 1);
+    };
   }, [open, onClose]);
   if (!open) return null;
   const width = size === 'md' ? 'max-w-lg' : size === 'lg' ? 'max-w-3xl' : 'max-w-5xl';

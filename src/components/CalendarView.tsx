@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameMonth, parseISO, startOfMonth, startOfWeek } from 'date-fns';
-import { Ban, Building2, Check, ChevronLeft, ChevronRight, FileSearch, FileUp, Undo2 } from 'lucide-react';
+import { Ban, Building2, CalendarOff, Check, ChevronLeft, ChevronRight, FileSearch, FileUp, Undo2 } from 'lucide-react';
 import { useTollStore } from '../store/useTollStore';
 import { useAnalysis } from '../hooks/useAnalysis';
 import { makeDayContextResolver } from '../utils/tollDetectionEngine';
@@ -15,6 +15,8 @@ export default function CalendarView() {
   const selectTxn = useTollStore((s) => s.selectTxn);
   const setView = useTollStore((s) => s.setView);
   const openModal = useTollStore((s) => s.openModal);
+  const setLeaveImportOpen = useTollStore((s) => s.setLeaveImportOpen);
+  const leaveByDate = useMemo(() => new Map(settings.leaveDates.map((l) => [l.date, l])), [settings.leaveDates]);
 
   const months = useMemo(() => [...new Set(days.map((d) => d.date.slice(0, 7)))].sort(), [days]);
   const [month, setMonth] = useState<string>(() => months[0] ?? format(new Date(), 'yyyy-MM'));
@@ -46,7 +48,12 @@ export default function CalendarView() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold tracking-tight">Calendar</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold tracking-tight">Calendar</h1>
+          <button className="btn-secondary btn-sm" onClick={() => setLeaveImportOpen(true)}>
+            <CalendarOff className="h-3.5 w-3.5" /> Import leave screenshot
+          </button>
+        </div>
         <div className="flex flex-wrap gap-1.5">
           {months.map((m) => (
             <button
@@ -105,7 +112,12 @@ export default function CalendarView() {
                     <span className={cx('num text-xs font-semibold', ctx.isWorkDay ? 'text-slate-900 dark:text-white' : 'text-slate-400')}>{format(date, 'd')}</span>
                     {ctx.isWorkDay && <span className="h-1.5 w-1.5 rounded-full bg-blue-500" title="Rostered work day" />}
                   </div>
-                  {offDay && <span className="mt-0.5 truncate text-[10px] text-rose-600 dark:text-rose-400">{ctx.dayType === 'leave' ? 'Leave' : 'Holiday'}</span>}
+                  {offDay && (
+                    <span className="mt-0.5 truncate text-[10px] text-rose-600 dark:text-rose-400">
+                      {ctx.dayType === 'leave' ? leaveByDate.get(iso)?.type ?? 'Leave' : 'Holiday'}
+                    </span>
+                  )}
+                  {ctx.partialLeave && <span className="mt-0.5 truncate text-[10px] text-orange-600 dark:text-orange-400">½ {leaveByDate.get(iso)?.type ?? 'leave'}</span>}
                   {d && (
                     <div className="mt-auto">
                       {d.likelyOfficeAttendance && <Building2 className="mb-0.5 h-3 w-3 text-emerald-600" />}

@@ -4,6 +4,7 @@ import {
   CalendarOff,
   Car,
   Database,
+  ImagePlus,
   Plus,
   Settings,
   SlidersHorizontal,
@@ -44,6 +45,12 @@ export default function SettingsModal() {
     if (open) setDraft(settings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // Leave imported from a screenshot while Settings is open is saved straight to the store — pull it into the draft.
+  useEffect(() => {
+    if (open) setDraft((d) => ({ ...d, leaveDates: settings.leaveDates }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.leaveDates]);
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(settings);
   const set = <K extends keyof UserSettings>(k: K, v: UserSettings[K]) => setDraft((d) => ({ ...d, [k]: v }));
@@ -332,7 +339,8 @@ function SaturdayTab({ draft, set }: TabProps) {
 }
 
 function LeaveTab({ draft, set }: TabProps) {
-  const [leave, setLeave] = useState({ date: '', to: '', type: 'Annual' as LeaveType, note: '' });
+  const [leave, setLeave] = useState({ date: '', to: '', type: 'Annual' as LeaveType, note: '', partial: false });
+  const setLeaveImportOpen = useTollStore((s) => s.setLeaveImportOpen);
   const [oneOff, setOneOff] = useState({ date: '', note: '' });
   const [hol, setHol] = useState({ date: '', name: '' });
   const year = new Date().getFullYear();
@@ -344,16 +352,31 @@ function LeaveTab({ draft, set }: TabProps) {
     const end = leave.to ? parseISO(leave.to) : start;
     for (let d = start; d <= end; d = addDays(d, 1)) {
       const iso = format(d, 'yyyy-MM-dd');
-      if (!out.some((l) => l.date === iso)) out.push({ id: uid('leave'), date: iso, type: leave.type, note: leave.note || undefined });
+      if (!out.some((l) => l.date === iso)) out.push({ id: uid('leave'), date: iso, type: leave.type, note: leave.note || undefined, partial: leave.partial || undefined, source: 'manual' });
     }
     set('leaveDates', out.sort((a, b) => a.date.localeCompare(b.date)));
-    setLeave({ ...leave, date: '', to: '', note: '' });
+    setLeave({ ...leave, date: '', to: '', note: '', partial: false });
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <H sub="Tolls on leave days score below 50% and are excluded by default.">Leave dates</H>
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">Leave dates</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Tolls on full leave days score below 50% and are excluded. Half-day leave keeps tolls claimable but flags them for review.</p>
+          </div>
+          <button className="btn-primary btn-sm" onClick={() => setLeaveImportOpen(true)}>
+            <ImagePlus className="h-3.5 w-3.5" /> Import from screenshot
+          </button>
+        </div>
+        {draft.leaveDates.length > 0 && (
+          <div className="mb-2 flex justify-end">
+            <button className="btn-ghost btn-sm text-rose-600!" onClick={() => confirm(`Remove all ${draft.leaveDates.length} leave days?`) && set('leaveDates', [])}>
+              <Trash2 className="h-3.5 w-3.5" /> Clear all leave
+            </button>
+          </div>
+        )}
         <div className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1.4fr_auto]">
           <input type="date" className="input" aria-label="Leave from" value={leave.date} onChange={(e) => setLeave({ ...leave, date: e.target.value })} />
           <input type="date" className="input" aria-label="Leave to (optional)" value={leave.to} min={leave.date} onChange={(e) => setLeave({ ...leave, to: e.target.value })} />
@@ -363,8 +386,14 @@ function LeaveTab({ draft, set }: TabProps) {
           <input className="input" placeholder="Note (optional)" value={leave.note} onChange={(e) => setLeave({ ...leave, note: e.target.value })} />
           <button className="btn-secondary" disabled={!leave.date} onClick={addLeave}><Plus className="h-4 w-4" /> Add</button>
         </div>
-        <p className="mt-1 text-[11px] text-slate-500">Set a “to” date to add a range of leave days at once.</p>
-        <DateList items={draft.leaveDates.map((l) => ({ id: l.id, date: l.date, label: `${l.type}${l.note ? ` — ${l.note}` : ''}` }))} onRemove={(id) => set('leaveDates', draft.leaveDates.filter((l) => l.id !== id))} tone="amber" />
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] text-slate-500">Set a “to” date to add a range of leave days at once.</p>
+          <label className="flex items-center gap-1.5 text-xs">
+            <input type="checkbox" className="accent-blue-600" checked={leave.partial} onChange={(e) => setLeave({ ...leave, partial: e.target.checked })} /> Half day / part day
+          </label>
+        </div>
+        <DateList
+          items={draft.leaveDates.map((l) => ({ id: l.id, date: l.date, label: `${l.partial ? '½ ' : ''}${l.type}${l.note ? ` — ${l.note}` : ''}${l.source === 'screenshot' ? ' 📷' : ''}` }))} onRemove={(id) => set('leaveDates', draft.leaveDates.filter((l) => l.id !== id))} tone="amber" />
       </div>
 
       <div>

@@ -4,6 +4,7 @@ import {
   Brain,
   Building2,
   CalendarCheck,
+  CalendarOff,
   CircleDollarSign,
   Clock,
   FileUp,
@@ -119,6 +120,9 @@ export default function DashboardView() {
               <AlertTriangle className="h-4 w-4 text-amber-500" /> Review {reviewCount} tolls
             </button>
           )}
+          <button className="btn-secondary" onClick={() => useTollStore.getState().setLeaveImportOpen(true)}>
+            <CalendarOff className="h-4 w-4" /> Import leave
+          </button>
           <button className="btn-secondary" onClick={() => setView('split')}>
             Inspect on PDF
           </button>

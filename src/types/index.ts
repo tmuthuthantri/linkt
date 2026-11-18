@@ -139,6 +139,10 @@ export interface LeaveDate {
   date: string;
   type: LeaveType;
   note?: string;
+  /** Half day / hours-based leave — the employee may still have commuted. */
+  partial?: boolean;
+  /** Where the entry came from (manual entry or screenshot import). */
+  source?: 'manual' | 'screenshot';
 }
 
 export interface OneOffWorkDay {
@@ -221,7 +225,8 @@ export type AuditEventType =
   | 'settings'
   | 'export'
   | 'reset'
-  | 'delete';
+  | 'delete'
+  | 'leave-import';
 
 export interface AuditLogEntry {
   id: string;

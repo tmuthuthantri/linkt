@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "postinstall": "node scripts/copy-pdfjs-assets.mjs",
+    "postinstall": "node scripts/copy-vendor-assets.mjs",
     "dev": "vite",
     "build": "tsc --noEmit -p . && vite build",
     "typecheck": "tsc --noEmit -p .",
@@ -12,6 +12,7 @@
     "sample:generate": "node scripts/generate-sample-statement.mjs"
   },
   "dependencies": {
+    "@tesseract.js-data/eng": "^1.0.0",
     "canvas-confetti": "^1.9.4",
     "date-fns": "^4.4.0",
     "idb-keyval": "^6.3.0",
@@ -22,6 +23,7 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "recharts": "^3.11.0",
+    "tesseract.js": "^7.0.0",
     "xlsx": "^0.18.5",
     "zustand": "^5.1.0"
   },

@@ -12,12 +12,26 @@ All processing happens in your browser. Statements, settings, overrides and the 
 ## Getting started
 
 ```bash
-npm install        # also copies pdf.js fonts/cmaps/wasm into public/pdfjs
+npm install        # also copies pdf.js + Tesseract OCR assets into public/ (no CDN needed)
 npm run dev        # http://localhost:5173
 npm run build      # type-check + production build
 ```
 
 To try it without a real statement, click **Upload → Try a sample statement**. This loads `public/samples/sample-toll-statement.pdf`, a synthetic document. To regenerate it, run `npm run sample:generate`.
+
+## Importing leave from screenshots
+
+Use **Dashboard → Import leave**, **Calendar → Import leave screenshot**, or **Settings → Leave & holidays → Import from screenshot**. You can drop in, browse for, or paste (Ctrl+V / ⌘V) screenshots of your HR portal, payroll system or calendar.
+
+1. **On-device OCR.** Tesseract.js reads the image in your browser, using a self-hosted engine and English model. The image is upscaled and contrast-boosted first, and dark-mode screenshots are inverted. Words are then regrouped into visual rows by their bounding boxes, so each table row keeps its leave type, dates and status together.
+2. **Parsing.** `src/utils/leaveScreenshotParser.ts` turns the text into leave entries:
+   - **Dates:** `dd/mm/yyyy`, `12 Aug 2026`, `Aug 12, 2026`, ISO, compact ranges like `12–16 Oct`, and `from … to …` ranges. A missing year is inferred from other dates in the screenshot, or from the statement period.
+   - **Leave type:** Annual, Sick, Personal/Carer's, RDO/TOIL, Long Service, Training or Other.
+   - **Status:** declined or cancelled leave is unticked by default, and pending leave is flagged.
+   - **Part days:** `0.5`, `half day` and hours-based entries are marked as part days.
+   - **Other dates ignored:** dates such as "Submitted on …" are skipped.
+3. **Review before applying.** Every entry is editable before it's saved. Each row shows how many statement tolls fall on those days and how much would come off the claim. If OCR misreads something, use **View / fix text** to correct the recognised text and re-scan it.
+4. **Applying.** Full leave days drop below 50% confidence and are excluded from the claim. Half-day leave caps confidence at 85%, so those tolls stay claimable but are flagged for review. Manual claim decisions on the new leave days are reset by default (you can turn this off), and the import is written to the audit trail.
 
 ## Architecture
 
@@ -32,7 +46,8 @@ To try it without a real statement, click **Upload → Try a sample statement**.
 | `src/utils/australianHolidays.ts` | National, QLD, NSW and VIC public holidays, including substitute days, Easter and the Ekka |
 | `src/utils/highlightedPdfExporter.ts` | Renders each original page at 2×, then draws translucent highlights and left-margin checkmarks. Adds a header and a legend footer as extra margin, so they never cover statement content. |
 | `src/utils/reportExporter.ts` | PDF claim report (summary, GST, invoice references, signature block), multi-sheet `.xlsx`, and CSV |
-| `src/components/*` | Header, Dashboard, Transactions, Split (PDF) view, PDF viewer, Calendar, and the Upload, Settings, Export, Audit and Reset modals |
+| `src/utils/ocr.ts` / `leaveScreenshotParser.ts` | On-device OCR for leave screenshots, plus the leave-text parser |
+| `src/components/*` | Header, Dashboard, Transactions, Split (PDF) view, PDF viewer, Calendar, and the Upload, Leave import, Settings, Export, Audit and Reset modals |
 
 ## Confidence scoring
 

@@ -21,6 +21,7 @@ export interface DayContext {
   dayType: DayType;
   label: string;
   isWorkDay: boolean;
+  partialLeave?: string;
   windows: { morningStart: number; morningEnd: number; eveningStart: number; eveningEnd: number };
 }
 
@@ -72,7 +73,7 @@ export function makeDayContextResolver(settings: UserSettings, years: number[]) 
     eveningEnd: toMinutes(s.eveningEnd),
   };
 
-  return (date: string): DayContext => {
+  const resolveFull = (date: string): DayContext => {
     const d = parseISO(date);
     const weekday = d.getDay();
     const windows = weekday === 6 && s.enabled ? satWindows : weekdayWindows;
@@ -80,7 +81,7 @@ export function makeDayContextResolver(settings: UserSettings, years: number[]) 
     const off = oneOff.get(date);
     if (off) return { ...base, dayType: 'one-off-work', label: off.note ? `One-off work day — ${off.note}` : 'One-off work day', isWorkDay: true };
     const lv = leave.get(date);
-    if (lv) return { ...base, dayType: 'leave', label: `${lv.type} leave${lv.note ? ` — ${lv.note}` : ''}`, isWorkDay: false };
+    if (lv && !lv.partial) return { ...base, dayType: 'leave', label: `${lv.type} leave${lv.note ? ` — ${lv.note}` : ''}`, isWorkDay: false };
     const hol = holidays.get(date);
     if (hol) return { ...base, dayType: 'public-holiday', label: `Public holiday — ${hol.name}`, isWorkDay: false };
     if (weekday === 6 && isSaturdayRostered(date, s)) return { ...base, dayType: 'saturday-roster', label: `Rostered Saturday shift (${s.shiftStart}–${s.shiftEnd})`, isWorkDay: true };
@@ -93,6 +94,17 @@ export function makeDayContextResolver(settings: UserSettings, years: number[]) 
     }
     if (weekday === 0 || weekday === 6) return { ...base, dayType: 'weekend', label: 'Weekend — not rostered', isWorkDay: false };
     return { ...base, dayType: 'non-rostered', label: `Not rostered under ${roster?.name ?? 'roster'}`, isWorkDay: false };
+  };
+
+  return (date: string): DayContext => {
+    const ctx = resolveFull(date);
+    const lv = leave.get(date);
+    if (lv?.partial && ctx.dayType !== 'one-off-work') {
+      const what = `half-day ${lv.type.toLowerCase()} leave${lv.note ? ` — ${lv.note}` : ''}`;
+      if (ctx.isWorkDay) return { ...ctx, label: `${ctx.label} with ${what}`, partialLeave: what };
+      return ctx;
+    }
+    return ctx;
   };
 }
 
@@ -231,6 +243,11 @@ export function analyseTransactions(
             reasons.push(`Timing (${trip.start.slice(0, 5)}) resembles a commute; add a one-off work day in Settings if you worked.`);
           }
           confidence = Math.min(49, confidence);
+        }
+
+        if (ctx.partialLeave && confidence > 85) {
+          confidence = 85;
+          reasons.push(`You had ${ctx.partialLeave} this day — only one leg may be work travel, so this needs your review.`);
         }
 
         if (vehicleRegistered === false) {

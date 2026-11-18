@@ -11,6 +11,7 @@ import SettingsModal from './components/SettingsModal';
 import ExportModal from './components/ExportModal';
 import AuditTrailModal from './components/AuditTrailModal';
 import ResetConfirmModal from './components/ResetConfirmModal';
+import LeaveImportModal from './components/LeaveImportModal';
 
 export default function App() {
   const hydrated = useTollStore((s) => s.hydrated);
@@ -44,6 +45,7 @@ export default function App() {
       <ExportModal />
       <AuditTrailModal />
       <ResetConfirmModal />
+      <LeaveImportModal />
     </div>
   );
 }

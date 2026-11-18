@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Download, FileDown, FileUp, History, Brain, MousePointerClick, MessageSquareText, ListChecks, Settings, RotateCcw, Trash2 } from 'lucide-react';
+import { CalendarOff, Download, FileDown, FileUp, History, Brain, MousePointerClick, MessageSquareText, ListChecks, Settings, RotateCcw, Trash2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useTollStore } from '../store/useTollStore';
 import type { AuditEventType } from '../types';
@@ -16,6 +16,7 @@ const META: Record<AuditEventType, { label: string; icon: typeof History; cls: s
   settings: { label: 'Settings', icon: Settings, cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' },
   export: { label: 'Export', icon: FileDown, cls: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400' },
   reset: { label: 'Reset', icon: RotateCcw, cls: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' },
+  'leave-import': { label: 'Leave import', icon: CalendarOff, cls: 'bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400' },
   delete: { label: 'Removed', icon: Trash2, cls: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' },
 };
 

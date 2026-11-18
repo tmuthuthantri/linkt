@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 import { clear as idbClear, del, get, set, createStore, keys } from 'idb-keyval';
 import type {
+  LeaveDate,
   AuditEventType,
   AuditLogEntry,
   StatementDocument,
@@ -102,6 +103,9 @@ export interface TollState {
   activeStatementId: string | null;
   modal: null | 'upload' | 'settings' | 'export' | 'audit' | 'reset';
   settingsTab: string;
+  leaveImportOpen: boolean;
+  setLeaveImportOpen: (open: boolean) => void;
+  applyLeaveImport: (entries: LeaveDate[], opts: { clearOverrides: boolean; summary: string }) => { added: number; replaced: number; overridesCleared: number };
 
   setView: (v: ViewKey) => void;
   selectTxn: (id: string | null) => void;
@@ -135,6 +139,43 @@ export const useTollStore = create<TollState>()(
       activeStatementId: null,
       modal: null,
       settingsTab: 'profile',
+      leaveImportOpen: false,
+      setLeaveImportOpen: (leaveImportOpen) => setState({ leaveImportOpen }),
+
+      applyLeaveImport: (entries, { clearOverrides, summary }) => {
+        const s = getState();
+        const byDate = new Map(s.settings.leaveDates.map((l) => [l.date, l]));
+        let added = 0;
+        let replaced = 0;
+        for (const e of entries) {
+          if (byDate.has(e.date)) replaced++;
+          else added++;
+          byDate.set(e.date, e);
+        }
+        const dates = new Set(entries.filter((e) => !e.partial).map((e) => e.date));
+        let overridesCleared = 0;
+        let overrides = s.overrides;
+        if (clearOverrides) {
+          overrides = { ...s.overrides };
+          for (const t of s.transactions) {
+            const o = overrides[t.id];
+            if (!dates.has(t.date) || o?.included === undefined) continue;
+            overridesCleared++;
+            if (o.notes) overrides[t.id] = { notes: o.notes, updatedAt: new Date().toISOString() };
+            else delete overrides[t.id];
+          }
+        }
+        setState({
+          overrides,
+          settings: { ...s.settings, leaveDates: [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date)) },
+        });
+        getState().log(
+          'leave-import',
+          `Imported ${entries.length} leave day(s) from screenshot`,
+          `${summary} · ${added} new, ${replaced} updated${overridesCleared ? ` · ${overridesCleared} manual claim decision(s) on leave days reset` : ''}`,
+        );
+        return { added, replaced, overridesCleared };
+      },
 
       setView: (view) => setState({ view }),
       selectTxn: (selectedTxnId) => {
