@@ -6,7 +6,7 @@
   "scripts": {
     "postinstall": "node scripts/copy-vendor-assets.mjs",
     "dev": "vite",
-    "build": "tsc --noEmit -p . && vite build",
+    "build": "tsc --noEmit -p . && vite build && node scripts/escape-control-chars.mjs dist",
     "typecheck": "tsc --noEmit -p .",
     "preview": "vite preview",
     "sample:generate": "node scripts/generate-sample-statement.mjs"

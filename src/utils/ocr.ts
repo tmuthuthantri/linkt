@@ -1,4 +1,6 @@
 import { createWorker, OEM, PSM, type Worker } from 'tesseract.js';
+import { get as idbGet, set as idbSet } from 'idb-keyval';
+import { assetUrl } from './format';
 import { wordsToRows, type OcrWord } from './leaveScreenshotParser';
 
 /**
@@ -9,17 +11,40 @@ import { wordsToRows, type OcrWord } from './leaveScreenshotParser';
 let workerPromise: Promise<Worker> | null = null;
 let progressCb: ((p: number, status: string) => void) | null = null;
 
+/**
+ * Tesseract reads `./eng.traineddata` from its IndexedDB cache (idb-keyval default
+ * store) before fetching. Seeding it from a base64 text copy of the model lets the
+ * app run on hosts that refuse to serve .gz / .traineddata files.
+ */
+async function seedModelCache(base: string) {
+  const key = './eng.traineddata';
+  try {
+    if (await idbGet(key)) return;
+    const res = await fetch(`${base}/lang/eng.traineddata.gz.b64.txt`);
+    if (!res.ok) return; // fall back to Tesseract fetching eng.traineddata.gz itself
+    const b64 = (await res.text()).trim();
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    await idbSet(key, bytes); // gzipped — Tesseract detects and gunzips it
+  } catch {
+    /* storage unavailable — Tesseract will fetch the model normally */
+  }
+}
+
 function getWorker() {
   if (!workerPromise) {
-    const base = `${location.origin}${import.meta.env.BASE_URL}tesseract`;
-    workerPromise = createWorker('eng', OEM.LSTM_ONLY, {
+    const base = assetUrl('tesseract');
+    workerPromise = seedModelCache(base).then(() => createWorker('eng', OEM.LSTM_ONLY, {
       workerPath: `${base}/worker.min.js`,
       corePath: `${base}/core`,
       langPath: `${base}/lang`,
       gzip: true,
       cacheMethod: 'write',
+      // Load the worker script directly (same origin) rather than via a blob: URL — friendlier to strict CSPs.
+      workerBlobURL: false,
       logger: (m: { progress: number; status: string }) => progressCb?.(m.progress, m.status),
-    }).then(async (w) => {
+    })).then(async (w) => {
       await w.setParameters({ tessedit_pageseg_mode: PSM.AUTO, preserve_interword_spaces: '1' });
       return w;
     });

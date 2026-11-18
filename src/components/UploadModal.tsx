@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, FileText, FileUp, Loader2, Sparkles, Trash2, UploadCloud } from 'lucide-react';
 import { useTollStore } from '../store/useTollStore';
 import { extractFromPdfBytes } from '../utils/pdfExtractor';
-import { uid, money, fmtDate } from '../utils/format';
+import { uid, money, fmtDate, assetUrl } from '../utils/format';
 import { getAnalysisSnapshot } from '../hooks/useAnalysis';
 import type { StatementDocument } from '../types';
 import { Modal, cx } from './ui';
@@ -104,7 +104,7 @@ export default function UploadModal() {
   };
 
   const loadSample = async () => {
-    const res = await fetch(`${import.meta.env.BASE_URL}samples/sample-toll-statement.pdf`);
+    const res = await fetch(assetUrl('samples/sample-toll-statement.pdf'));
     const buf = new Uint8Array(await res.arrayBuffer());
     void processFiles([{ name: 'sample-toll-statement.pdf', size: buf.byteLength, bytes: async () => buf }]);
   };

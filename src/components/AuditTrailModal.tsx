@@ -39,17 +39,17 @@ export default function AuditTrailModal() {
       footer={
         <>
           <span className="mr-auto text-xs text-slate-500">{audit.length} events recorded</span>
-          <button className="btn-secondary" disabled={!audit.length} onClick={() => downloadBlob(new Blob([JSON.stringify(audit, null, 2)], { type: 'application/json' }), `toll_claim_audit_${stamp}.json`)}>
+          <button className="btn-secondary" disabled={!audit.length} onClick={() => void downloadBlob(new Blob([JSON.stringify(audit, null, 2)], { type: 'application/json' }), `toll_claim_audit_${stamp}.json`).catch(() => {})}>
             <Download className="h-4 w-4" /> JSON
           </button>
           <button
             className="btn-secondary"
             disabled={!audit.length}
             onClick={() =>
-              downloadBlob(
+              void downloadBlob(
                 new Blob(['﻿' + toCsv(audit.map((e) => ({ Timestamp: e.timestamp, Type: META[e.type].label, Event: e.message, Details: e.details ?? '' })))], { type: 'text/csv;charset=utf-8' }),
                 `toll_claim_audit_${stamp}.csv`,
-              )
+              ).catch(() => {})
             }
           >
             <Download className="h-4 w-4" /> CSV

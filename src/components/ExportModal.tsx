@@ -76,7 +76,7 @@ export default function ExportModal() {
         includeHeader,
         onProgress: (d, t) => setProgress(`Rendering page ${d} of ${t}…`),
       });
-      downloadBlob(blob, `${who}_highlighted_toll_statement_${stamp}.pdf`);
+      await downloadBlob(blob, `${who}_highlighted_toll_statement_${stamp}.pdf`);
       log('export', `Exported highlighted statement PDF (${stmts.length} statement(s), ${STYLES.find((s) => s.key === settings.highlightStyle)?.name})`, onlyClaimed ? 'Claimed tolls only' : 'All statuses highlighted');
     });
 
@@ -84,10 +84,10 @@ export default function ExportModal() {
     run(kind, `${kind === 'pdf' ? 'PDF claim report' : kind === 'xlsx' ? 'Excel workbook' : 'CSV file'} downloaded`, async () => {
       const r = await import('../utils/reportExporter');
       const input = reportInput();
-      if (kind === 'pdf') downloadBlob(r.exportPdfReport(input), `${who}_toll_reimbursement_claim_${stamp}.pdf`);
-      if (kind === 'xlsx') downloadBlob(r.exportExcel(input), `${who}_toll_reimbursement_claim_${stamp}.xlsx`);
-      if (kind === 'csv') downloadBlob(r.exportCsv(input, 'claimed'), `${who}_toll_claim_items_${stamp}.csv`);
-      if (kind === 'csv-all') downloadBlob(r.exportCsv(input, 'all'), `${who}_all_toll_transactions_${stamp}.csv`);
+      if (kind === 'pdf') await downloadBlob(r.exportPdfReport(input), `${who}_toll_reimbursement_claim_${stamp}.pdf`);
+      if (kind === 'xlsx') await downloadBlob(r.exportExcel(input), `${who}_toll_reimbursement_claim_${stamp}.xlsx`);
+      if (kind === 'csv') await downloadBlob(r.exportCsv(input, 'claimed'), `${who}_toll_claim_items_${stamp}.csv`);
+      if (kind === 'csv-all') await downloadBlob(r.exportCsv(input, 'all'), `${who}_all_toll_transactions_${stamp}.csv`);
       log('export', `Exported ${kind.toUpperCase()} reimbursement report`, `${totals.claimCount} tolls · ${money(totals.claimAmount, true)}`);
     });
 
