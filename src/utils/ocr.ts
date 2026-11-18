@@ -1,6 +1,7 @@
 import { createWorker, OEM, PSM, type Worker } from 'tesseract.js';
 import { get as idbGet, set as idbSet } from 'idb-keyval';
 import { assetUrl } from './format';
+import { STANDALONE, base64ToBytes, standaloneOcrAssets } from './standalone';
 import { wordsToRows, type OcrWord } from './leaveScreenshotParser';
 
 /**
@@ -16,17 +17,17 @@ let progressCb: ((p: number, status: string) => void) | null = null;
  * store) before fetching. Seeding it from a base64 text copy of the model lets the
  * app run on hosts that refuse to serve .gz / .traineddata files.
  */
-async function seedModelCache(base: string) {
+async function seedModelCache(base: string, inlineB64?: string) {
   const key = './eng.traineddata';
   try {
     if (await idbGet(key)) return;
-    const res = await fetch(`${base}/lang/eng.traineddata.gz.b64.txt`);
-    if (!res.ok) return; // fall back to Tesseract fetching eng.traineddata.gz itself
-    const b64 = (await res.text()).trim();
-    const bin = atob(b64);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    await idbSet(key, bytes); // gzipped — Tesseract detects and gunzips it
+    let b64 = inlineB64;
+    if (!b64) {
+      const res = await fetch(`${base}/lang/eng.traineddata.gz.b64.txt`);
+      if (!res.ok) return; // fall back to Tesseract fetching eng.traineddata.gz itself
+      b64 = await res.text();
+    }
+    await idbSet(key, base64ToBytes(b64)); // gzipped — Tesseract detects and gunzips it
   } catch {
     /* storage unavailable — Tesseract will fetch the model normally */
   }
@@ -34,10 +35,15 @@ async function seedModelCache(base: string) {
 
 function getWorker() {
   if (!workerPromise) {
-    const base = assetUrl('tesseract');
-    workerPromise = seedModelCache(base).then(() => createWorker('eng', OEM.LSTM_ONLY, {
-      workerPath: `${base}/worker.min.js`,
-      corePath: `${base}/core`,
+    const base = STANDALONE ? '' : assetUrl('tesseract');
+    workerPromise = (STANDALONE ? standaloneOcrAssets() : Promise.resolve(null))
+      .then(async (inline) => {
+        await seedModelCache(base, inline?.modelB64);
+        return inline;
+      })
+      .then((inline) => createWorker('eng', OEM.LSTM_ONLY, {
+      workerPath: inline ? inline.workerPath : `${base}/worker.min.js`,
+      corePath: inline ? inline.corePath : `${base}/core`,
       langPath: `${base}/lang`,
       gzip: true,
       cacheMethod: 'write',

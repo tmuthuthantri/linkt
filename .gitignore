@@ -5,3 +5,4 @@ dist
 public/pdfjs
 public/tesseract
 .taste-skill/chrome-*
+dist-standalone

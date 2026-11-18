@@ -19,6 +19,19 @@ npm run build      # type-check + production build
 
 To try it without a real statement, click **Upload → Try a sample statement**. This loads `public/samples/sample-toll-statement.pdf`, a synthetic document. To regenerate it, run `npm run sample:generate`.
 
+## Single-file HTML version
+
+`npm run build:standalone` builds the whole app into **one HTML file**: `standalone/linkt-toll-reimbursement-assistant.html` (about 12 MB). Everything is inside it: the app, the PDF engine, the OCR engine and its English model, the fonts and the sample statement.
+
+- **Offline:** download it and double-click it to open in Chrome, Edge, Firefox or Safari 16.4+. No server or internet connection is needed.
+- **Sharing:** email it, or upload it to any static host (Netlify Drop, GitHub Pages, SharePoint, an S3 bucket) to get a public link.
+- **Your data:** each person's statements and settings are saved in their own browser, the same as in the main app.
+
+Differences from the main build:
+- **PDF parsing** runs on the page itself rather than in a background worker, because browsers block workers for files opened from disk. This is fine for statements of a few pages.
+- **PDF fonts:** pages are drawn with system fonts instead of the bundled standard PDF fonts.
+- **Old Safari:** the OCR engine needs WebAssembly SIMD, which Safari only has from version 16.4.
+
 ## Importing leave from screenshots
 
 Use **Dashboard → Import leave**, **Calendar → Import leave screenshot**, or **Settings → Leave & holidays → Import from screenshot**. You can drop in, browse for, or paste (Ctrl+V / ⌘V) screenshots of your HR portal, payroll system or calendar.
